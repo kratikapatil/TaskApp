@@ -2,6 +2,7 @@ package com.taskapp.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        final SwipeRefreshLayout swipe_layout = findViewById(R.id.swipe_layout);
         RecyclerView rv_news_list = findViewById(R.id.rv_news_list);
         SearchView sv_search = findViewById(R.id.sv_search);
         sv_search.setVisibility(View.VISIBLE);
@@ -59,12 +61,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
                 // Get News List Api
-                getNewsList(page);
+                getNewsList(offset);
             }
         };
-
         // Adds the scroll listener to RecyclerView
         rv_news_list.addOnScrollListener(scrollListener);
+
+        // Swipe Refresh Layout
+        swipe_layout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                swipe_layout.setRefreshing(false);
+                newsList.clear();
+                offset = 0;
+                getNewsList(0);
+            }
+        });
+
 
         // Search View
         sv_search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -93,7 +106,6 @@ public class MainActivity extends AppCompatActivity {
                         JSONObject js = new JSONObject(response);
 
                         JSONObject result = js.getJSONObject("result");
-                        newsList.clear();
                         JSONArray jsonArray = result.getJSONArray("data");
                         NewsModel model;
                         for (int i = 0; i < jsonArray.length(); i++) {
