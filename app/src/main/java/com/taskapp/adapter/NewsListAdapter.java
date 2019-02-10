@@ -25,17 +25,15 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
-public class NewsListAdapter extends RecyclerView.Adapter<NewsListAdapter.ViewHolder> implements Filterable  {
+public class NewsListAdapter extends RecyclerView.Adapter<NewsListAdapter.ViewHolder>{
     private Context mContext;
     private AdapterPositionListener listener;
     private Date date;
     private SimpleDateFormat format;
-    private ArrayList<NewsModel> newsList, mNewsList;
-    private ValueFilter valueFilter;
+    private ArrayList<NewsModel> newsList;
 
     public NewsListAdapter(ArrayList<NewsModel> newsList, Context mContext, AdapterPositionListener listener) {
         this.newsList = newsList;
-        this.mNewsList = newsList;
         this.mContext = mContext;
         this.listener = listener;
     }
@@ -51,9 +49,6 @@ public class NewsListAdapter extends RecyclerView.Adapter<NewsListAdapter.ViewHo
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         NewsModel model = newsList.get(position);
 
-        Glide.with(mContext).load(API.IMAGE_BASE_URL + model.images_url).into(holder.iv_news);
-        holder.tv_title.setText("Title: " + Html.fromHtml(model.title));
-
         if (model.created_at != null) {
             try {
                 date = new SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(model.created_at);
@@ -62,7 +57,12 @@ public class NewsListAdapter extends RecyclerView.Adapter<NewsListAdapter.ViewHo
                 e.printStackTrace();
             }
 
+            Glide.with(mContext).load(API.IMAGE_BASE_URL + model.images_url).into(holder.iv_news);
+            holder.tv_title.setText("Title: " + Html.fromHtml(model.title));
             holder.tv_date.setText(format.format(date).toUpperCase());
+        }else {
+            Glide.with(mContext).load(API.IMAGE_BASE_URL + model.profile_image).into(holder.iv_news);
+            holder.tv_title.setText("Title: " + Html.fromHtml(model.title));
         }
     }
 
@@ -97,42 +97,4 @@ public class NewsListAdapter extends RecyclerView.Adapter<NewsListAdapter.ViewHo
             }
         }
     }
-    @Override
-    public Filter getFilter() {
-        if (valueFilter == null) {
-            valueFilter = new ValueFilter();
-        }
-        return valueFilter;
-    }
-    private class ValueFilter extends Filter {
-        @Override
-        protected FilterResults performFiltering(CharSequence ch) {
-            FilterResults results = new FilterResults();
-
-            if (ch != null && ch.length() > 0) {
-                ArrayList<NewsModel> filterList = new ArrayList<>();
-                for (int i = 0; i < mNewsList.size(); i++) {
-                    if ((mNewsList.get(i).title.toUpperCase()).contains(ch.toString().toUpperCase()) || (mNewsList.get(i).description.toUpperCase()).contains(ch.toString().toUpperCase())) {
-                        filterList.add(mNewsList.get(i));
-                    }
-                }
-                results.count = filterList.size();
-                results.values = filterList;
-            } else {
-                results.count = mNewsList.size();
-                results.values = mNewsList;
-            }
-            return results;
-
-        }
-
-        @Override
-        protected void publishResults(CharSequence ch,
-                                      FilterResults results) {
-            newsList = (ArrayList<NewsModel>) results.values;
-            notifyDataSetChanged();
-        }
-
-    }
-
 }

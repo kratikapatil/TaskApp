@@ -1,11 +1,5 @@
 package com.taskapp.model;
 
-import java.util.List;
-
-/**
- * Created by krati on 16/01/2019.
- */
-
 public class NewsModel {
     public int id;
     public String title;
@@ -18,6 +12,7 @@ public class NewsModel {
     public String last_name;
     public String category_title;
     public String images_url;
+    public String profile_image;
   //  public List<ImagesBean> images;
 
     public static class ImagesBean {

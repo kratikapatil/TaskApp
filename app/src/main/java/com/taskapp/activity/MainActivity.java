@@ -15,6 +15,7 @@ import com.android.volley.VolleyError;
 import com.taskapp.R;
 import com.taskapp.adapter.NewsListAdapter;
 import com.taskapp.application.TaskApp;
+import com.taskapp.helper.Utils;
 import com.taskapp.listener.AdapterPositionListener;
 import com.taskapp.listener.EndlessRecyclerViewScrollListener;
 import com.taskapp.model.NewsModel;
@@ -89,7 +90,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onQueryTextChange(String newText) {
 
-                newsListAdapter.getFilter().filter(newText.trim());
+                if (newText.trim().length() >= 3) {
+                    newsList.clear();
+                    getSearchList(newText, 0);
+                }
+
+                if(newText.trim().length() == 0){
+                    newsList.clear();
+                    offset = 0;
+                    getNewsList(0);
+                }
+
                 return true;
             }
         });
@@ -145,6 +156,63 @@ public class MainActivity extends AppCompatActivity {
 
             });
             api.callApi("api/contents?page=" + offset, Request.Method.GET, null, true);
+        } else {
+            Toast.makeText(this, R.string.alert_connection, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Get News Search List Api
+    private void getSearchList(String search, final int page) {
+        if (AppHelper.isConnectingToInternet(this)) {
+
+            WebService api = new WebService(this, TaskApp.TAG, new WebService.WebResponseListner() {
+                @Override
+                public void onResponse(String response, String apiName) {
+                    try {
+                        JSONObject js = new JSONObject(response);
+                        Object res = js.get("result");
+
+                        if (res instanceof JSONObject) {
+                            JSONObject result = js.getJSONObject("result");
+
+                            JSONArray jsonArray = result.getJSONArray("data");
+                            NewsModel model;
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                model = new NewsModel();
+                                JSONObject object = jsonArray.getJSONObject(i);
+
+                                model.title = object.getString("title");
+                                model.first_name = object.getString("first_name");
+                                model.last_name = object.getString("last_name");
+                                model.profile_image = object.getString("profile_image");
+                                model.city = object.getString("city");
+
+                                newsList.add(model);
+                            }
+
+                            offset = page + 1;
+                            newsListAdapter.notifyDataSetChanged();
+                        }else{
+                            newsList.clear();
+                            View view = MainActivity.this.getCurrentFocus();
+                            if (view != null) {
+                                Utils.hideKeyboard(view, MainActivity.this);
+                            }
+                            Toast.makeText(MainActivity.this, "No item found", Toast.LENGTH_SHORT).show();
+                        }
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void ErrorListener(VolleyError error) {
+
+                }
+
+            });
+            api.callApiWithHeader("api/users?search=" + search, Request.Method.GET, null, true);
         } else {
             Toast.makeText(this, R.string.alert_connection, Toast.LENGTH_SHORT).show();
         }

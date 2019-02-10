@@ -43,7 +43,7 @@ public class WebService {
     }
 
     // for image
-    public void callMultiPartApi(final String url, final Map<String, String> params, final Map<String, Bitmap> bitmapList) {
+    private void callMultiPartApi(final String url, final Map<String, String> params, final Map<String, Bitmap> bitmapList) {
         VolleyMultipartRequest multipartRequest = new VolleyMultipartRequest(Request.Method.POST,
                 API.BASE_URL + url, new Response.Listener<NetworkResponse>() {
 
@@ -93,7 +93,7 @@ public class WebService {
         VolleySingleton.getInstance(mContext.getApplicationContext()).addToRequestQueue(multipartRequest);
     }
 
-    public String getNetworkMessage(VolleyError error) {
+    private String getNetworkMessage(VolleyError error) {
         NetworkResponse networkResponse = error.networkResponse;
         String errorMessage = "Unknown error";
         if (networkResponse == null) {
@@ -184,7 +184,47 @@ public class WebService {
 
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
+
+                return new HashMap<>();
+            }
+        };
+        TaskApp.getInstance().addToRequestQueue(stringRequest, TAG);
+    }
+
+
+    public void callApiWithHeader(final String url, int Method, final Map<String, String> params, final boolean isSelfErrorHandle) {
+        StringRequest stringRequest = new StringRequest(Method, API.BASE_URL + url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        System.out.println("#" + response);
+                        mListener.onResponse(response, url);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        if (isSelfErrorHandle) {
+                            handleError(error);
+                        }
+                        //handleError(error);
+
+                        mListener.ErrorListener(error);
+
+                    }
+                }) {
+
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                if (params == null)
+                    return super.getParams();
+                else return params;
+            }
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> header = new HashMap<>();
+                header.put("Authorization", "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjdkZTI1NjVlZjdlZGY0ZTIzYTczMTEyMzc0NTAyMmEzZDA5YzRkZWMwZmFjNmI3YjE3MTMxNGE1NGFkOWJjZDU3ZjI4NDc5OTA1NGFiNGMwIn0.eyJhdWQiOiIxIiwianRpIjoiN2RlMjU2NWVmN2VkZjRlMjNhNzMxMTIzNzQ1MDIyYTNkMDljNGRlYzBmYWM2YjdiMTcxMzE0YTU0YWQ5YmNkNTdmMjg0Nzk5MDU0YWI0YzAiLCJpYXQiOjE1NDc0ODk1OTYsIm5iZiI6MTU0NzQ4OTU5NiwiZXhwIjoxNTc5MDI1NTk2LCJzdWIiOiIxNyIsInNjb3BlcyI6W119.P1Vg7GAIsDMrwZ50yuNwwS89Lh3bsWbzyeWt5Z_DmhDHNndKuA6Bxdx9ECUbj8rOSDTiCFKFWEAJ1eriDlnzvXOZkR_HuOpTVT3VTmONGe5NvyjKiArW2bOhWYhbdWAkIf4Eigj27ANIdHMDglw1jSAaOE8cPtoTL-Nm2SuM0KV6HCzrXvT673njMbmgtN7siYs0Hknh35p_vSaADZdobjiSPKeIVrf1oIIHUfxJ7iBVAbHerzENhnJAl5o2g7uhWPUwqGhyz6BZGwvrsROt8yx0dgMgYgodxexoK-oHFCdFHBnjw0uWQNirs_bk65bRx-A9G8C_aQ-E4i_Lp81RUuSoTMkE2BCrCDQGD7gdNkZC6Th-R5fzhbLvSovt5a5lwnC_fZQJS3bldSb6xUG9EW97ZsLit4mbkAytKtax9zRjk5zJS6NDXbiRepoukMAGw1ysM3C3qG_Q63bQvehnTtp7q_eibgnRrOg-znpCba2nR9pFwFBgtAGDDD2iXF_Mxl36PnqfA56MuxEdlk559ZzE5QPXppQgE9oMxMq8Nor6ysCBxPNy54gBulMkmlbbtgvBNUluc_pJAy_Y9mEAjrFUAZ70uSZtAQwZgjv4YRbVfsoAtZW_hC8RmvpxH4m9bpdE3L0bV8wKkxDDldQGpNjpKJSHsqL_quZNx498bf0");
                 return header;
             }
         };
